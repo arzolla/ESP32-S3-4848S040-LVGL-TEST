@@ -13,16 +13,13 @@
 
 static void btn_event_cb(lv_event_t * e)
 {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * btn = lv_event_get_target_obj(e);
-    if(code == LV_EVENT_CLICKED) {
-        static uint8_t cnt = 0;
-        cnt++;
+    if(lv_event_get_code(e) != LV_EVENT_CLICKED) return;
 
-        /*Get the first child of the button which is the label and change its text*/
-        lv_obj_t * label = lv_obj_get_child(btn, 0);
-        lv_label_set_text_fmt(label, "Button: %d", cnt);
-    }
+    static uint8_t cnt = 0;
+    cnt++;
+
+    lv_obj_t * label = lv_event_get_user_data(e);
+    lv_label_set_text_fmt(label, "Button: %d", cnt);
 }
 
 static void backlight_on_event_cb(lv_event_t * e)
@@ -44,11 +41,12 @@ void lv_example_get_started_2(void)
     lv_obj_t * btn = lv_button_create(lv_screen_active());     /*Add a button the current screen*/
     lv_obj_set_pos(btn, 10, 10);                            /*Set its position*/
     lv_obj_set_size(btn, 120, 50);                          /*Set its size*/
-    lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_ALL, NULL);           /*Assign a callback to the button*/
 
     lv_obj_t * label = lv_label_create(btn);          /*Add a label to the button*/
     lv_label_set_text(label, "Button");                     /*Set the labels text*/
     lv_obj_center(label);
+
+    lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_CLICKED, label); 
 }
 
 
@@ -90,6 +88,21 @@ void lv_button_backlight_off_when_pressed(void)
     lv_obj_center(label);
 }
 
+
+void ui_task(void *pvParameter)
+{
+
+    bsp_display_lock(0);
+    lv_example_get_started_2();
+    lv_button_backlight_on();
+    lv_button_backlight_off();
+    lv_button_backlight_off_when_pressed();
+    bsp_display_unlock();
+
+
+    vTaskDelete(NULL);
+}
+
 void vTaskFunction( void * pvParameters )
 {
     /* Block for 500ms. */
@@ -107,6 +120,7 @@ void vTaskFunction( void * pvParameters )
 }
 
 
+
 void app_main(void)
 {
 
@@ -116,13 +130,8 @@ void app_main(void)
 
     //bsp_display_backlight_off();
 
-    lv_example_get_started_2();
-    lv_button_backlight_on();
-    lv_button_backlight_off();
-    lv_button_backlight_off_when_pressed();
-
     xTaskCreate(vTaskFunction, "vTaskFunction", 8192, NULL, 5, NULL);
-
+    xTaskCreate(ui_task, "ui", 8192, NULL, 5, NULL);
 
     for( ;; )
     {
