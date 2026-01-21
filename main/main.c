@@ -6,7 +6,7 @@
 #include <freertos/queue.h>
 #include <freertos/task.h>
 
-#include <bsp.h>
+#include <bsp/esp-bsp.h>
 
 
 #define TAG "app_main"
