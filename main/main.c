@@ -11,6 +11,12 @@
 
 #define TAG "app_main"
 
+#define initial_brightness 35
+
+static lv_obj_t * slider_label;
+
+
+
 static void btn_event_cb(lv_event_t * e)
 {
     if(lv_event_get_code(e) != LV_EVENT_CLICKED) return;
@@ -34,6 +40,21 @@ static void backlight_off_event_cb(lv_event_t * e)
     LV_UNUSED(e);  // evita warning
 
     bsp_display_backlight_off();
+}
+
+static void slider_event_cb(lv_event_t * e)
+{
+
+    lv_obj_t * slider = lv_event_get_target(e);
+
+    int slider_value = (int)lv_slider_get_value(slider);
+    char buf[8];
+    lv_snprintf(buf, sizeof(buf), "%d%%", slider_value);
+    lv_label_set_text(slider_label, buf);
+    lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
+
+    bsp_display_brightness_set(slider_value);
+
 }
 
 void lv_example_get_started_2(void)
@@ -89,6 +110,28 @@ void lv_button_backlight_off_when_pressed(void)
 }
 
 
+
+void lv_example_slider_1(void)
+{
+    /*Create a slider in the center of the display*/
+    lv_obj_t * slider = lv_slider_create(lv_scr_act());
+    lv_obj_set_pos(slider, 50, 300);  
+
+    lv_slider_set_value(slider, initial_brightness, LV_ANIM_OFF); 
+
+    lv_obj_add_event_cb(slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+
+    /*Create a label below the slider*/
+    slider_label = lv_label_create(lv_scr_act());
+
+    char buf[8];
+    lv_snprintf(buf, sizeof(buf), "%d%%", initial_brightness);
+
+    lv_label_set_text(slider_label, buf);
+
+    lv_obj_align_to(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
+}
+
 void ui_task(void *pvParameter)
 {
 
@@ -97,6 +140,7 @@ void ui_task(void *pvParameter)
     lv_button_backlight_on();
     lv_button_backlight_off();
     lv_button_backlight_off_when_pressed();
+    lv_example_slider_1();
     bsp_display_unlock();
 
 
@@ -128,7 +172,7 @@ void app_main(void)
 
     bsp_display_start();
 
-    //bsp_display_backlight_off();
+    bsp_display_brightness_set(20);
 
     xTaskCreate(vTaskFunction, "vTaskFunction", 8192, NULL, 5, NULL);
     xTaskCreate(ui_task, "ui", 8192, NULL, 5, NULL);

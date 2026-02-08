@@ -16,5 +16,6 @@
     "--compile-commands-dir=c:\\Users\\victo\\PROJECTS\\teste\\build"
   ],
   "idf.flashType": "UART",
-  "idf.portWin": "COM6"
+  "idf.portWin": "COM5",
+  "idf.currentSetup": "c:\\ESP\\v5.5.2\\esp-idf"
 }
